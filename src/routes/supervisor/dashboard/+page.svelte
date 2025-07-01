@@ -1,12 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { Check, X, MapPin, Calendar, User, LogOut, AlertTriangle } from 'lucide-svelte';
+  import { Check, X, MapPin, Calendar, User, LogOut, AlertTriangle, Map } from 'lucide-svelte';
   
   export let data: any;
   
   let pendingLogs = data.pendingLogs || [];
   let loading = false;
+  let showMapModal = false;
+  let selectedLocation: { lat: number; lng: number; address: string; employee: string } | null = null;
   
   async function updateCheckLogStatus(logId: string, status: 'verified' | 'invalid') {
     loading = true;
@@ -37,6 +39,20 @@
   
   function formatDate(date: string) {
     return new Date(date).toLocaleString();
+  }
+  
+  function openMap(lat: number, lng: number, address: string, employeeName: string) {
+    selectedLocation = { lat, lng, address, employee: employeeName };
+    showMapModal = true;
+  }
+  
+  function closeMap() {
+    showMapModal = false;
+    selectedLocation = null;
+  }
+  
+  function openInGoogleMaps(lat: number, lng: number) {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
   }
 </script>
 
@@ -112,13 +128,15 @@
                     {#if log.latitude && log.longitude}
                       <div class="flex items-center gap-2">
                         <MapPin class="w-4 h-4" />
-                        Location: {log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}
+                        <span class="flex-1">
+                          {log.address || `${log.latitude.toFixed(6)}, ${log.longitude.toFixed(6)}`}
+                        </span>
                       </div>
                     {/if}
                   </div>
                   
                   <!-- Action Buttons -->
-                  <div class="mt-4 flex gap-3">
+                  <div class="mt-4 flex flex-wrap gap-3">
                     <button
                       on:click={() => updateCheckLogStatus(log.id, 'verified')}
                       disabled={loading}
@@ -135,6 +153,15 @@
                       <AlertTriangle class="w-4 h-4" />
                       Flag Invalid
                     </button>
+                    {#if log.latitude && log.longitude}
+                      <button
+                        on:click={() => openMap(log.latitude, log.longitude, log.address || 'Unknown Location', `${log.employee.firstName} ${log.employee.lastName}`)}
+                        class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Map class="w-4 h-4" />
+                        View Location
+                      </button>
+                    {/if}
                   </div>
                 </div>
               </div>
@@ -144,4 +171,56 @@
       {/if}
     </div>
   </main>
-</div> 
+</div>
+
+<!-- Map Modal -->
+{#if showMapModal && selectedLocation}
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-hidden">
+      <div class="p-4 border-b flex justify-between items-center">
+        <div>
+          <h3 class="text-lg font-semibold">Location for {selectedLocation.employee}</h3>
+          <p class="text-sm text-gray-600">{selectedLocation.address}</p>
+        </div>
+        <button
+          on:click={closeMap}
+          class="text-gray-400 hover:text-gray-600 text-xl"
+        >
+          ×
+        </button>
+      </div>
+      
+      <div class="p-4">
+        <div class="mb-4 flex gap-3">
+                   <button
+           on:click={() => selectedLocation && openInGoogleMaps(selectedLocation.lat, selectedLocation.lng)}
+           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+         >
+           Open in Google Maps
+         </button>
+                   <div class="text-sm text-gray-600 flex items-center">
+           <MapPin class="w-4 h-4 mr-2" />
+           {selectedLocation?.lat.toFixed(6)}, {selectedLocation?.lng.toFixed(6)}
+         </div>
+        </div>
+        
+        <!-- Embedded Map -->
+                 <div class="w-full h-96 rounded-lg overflow-hidden border">
+           <iframe
+             src="https://www.openstreetmap.org/export/embed.html?bbox={(selectedLocation?.lng || 0) - 0.001},{(selectedLocation?.lat || 0) - 0.001},{(selectedLocation?.lng || 0) + 0.001},{(selectedLocation?.lat || 0) + 0.001}&layer=mapnik&marker={selectedLocation?.lat || 0},{selectedLocation?.lng || 0}"
+             style="border: 0"
+             class="w-full h-full"
+             allowfullscreen={true}
+             loading={'lazy'}
+             referrerpolicy="no-referrer-when-downgrade"
+             title="Location Map"
+           ></iframe>
+         </div>
+        
+        <div class="mt-4 text-xs text-gray-500">
+          Map data © <a href="https://www.openstreetmap.org/" target="_blank" class="text-blue-600 hover:underline">OpenStreetMap</a> contributors
+        </div>
+      </div>
+    </div>
+  </div>
+{/if} 

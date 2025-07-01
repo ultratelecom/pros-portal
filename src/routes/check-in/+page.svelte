@@ -82,20 +82,21 @@
   async function submitCheckIn() {
     step = 'processing';
     
-    const formData = new FormData();
-    formData.append('pin', pin);
-    formData.append('photo', capturedPhoto);
-    formData.append('type', checkType);
-    
-    if (location) {
-      formData.append('latitude', location.coords.latitude.toString());
-      formData.append('longitude', location.coords.longitude.toString());
-    }
+    const requestData = {
+      pin,
+      photo: capturedPhoto,
+      type: checkType,
+      latitude: location?.coords.latitude?.toString() || null,
+      longitude: location?.coords.longitude?.toString() || null
+    };
     
     try {
       const response = await fetch('/api/check-in', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
       });
       
       const result = await response.json();

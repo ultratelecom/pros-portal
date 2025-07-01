@@ -2,6 +2,7 @@ import { graphqlClient,
   GET_EMPLOYEE_BY_PIN, 
   CREATE_CHECK_LOG, 
   GET_SUPERVISOR_BY_PIN, 
+  GET_SUPERVISOR_BY_ID,
   GET_PENDING_CHECKLOGS, 
   UPDATE_CHECK_LOG_STATUS, 
   GET_ADMIN_CODE, 
@@ -42,8 +43,10 @@ export const db = {
       if (where.pin) {
         const data: any = await graphqlClient.request(GET_SUPERVISOR_BY_PIN, { pin: where.pin });
         return data.Supervisor[0] || null;
+      } else if (where.id) {
+        const data: any = await graphqlClient.request(GET_SUPERVISOR_BY_ID, { id: where.id });
+        return data.Supervisor_by_pk || null;
       }
-      // Handle id lookup if needed
       return null;
     }
   },

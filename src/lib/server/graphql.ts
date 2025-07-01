@@ -3,10 +3,30 @@ import { GraphQLClient } from 'graphql-request';
 const endpoint = 'https://qwhnyvawliftwrekbyse.hasura.us-east-1.nhost.run/v1/graphql';
 const adminSecret = 'NbAr9YrmWw#aOme1Me1$TVF4fzy3^-*K';
 
+// Custom fetch with timeout and retry logic
+const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  
+  try {
+    const response = await fetch(input, {
+      ...init,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('GraphQL request failed:', error);
+    throw error;
+  }
+};
+
 export const graphqlClient = new GraphQLClient(endpoint, {
   headers: {
     'x-hasura-admin-secret': adminSecret,
   },
+  fetch: customFetch
 });
 
 // Employee queries and mutations
@@ -29,7 +49,7 @@ export const GET_EMPLOYEE_BY_PIN = `
 `;
 
 export const CREATE_CHECK_LOG = `
-  mutation CreateCheckLog($employeeId: uuid!, $type: String!, $photoUrl: String, $latitude: Float, $longitude: Float, $address: String) {
+  mutation CreateCheckLog($employeeId: uuid!, $type: String!, $photoUrl: String, $latitude: float8, $longitude: float8, $address: String) {
     insert_CheckLog_one(object: {
       employeeId: $employeeId,
       type: $type,
@@ -55,6 +75,20 @@ export const CREATE_CHECK_LOG = `
 export const GET_SUPERVISOR_BY_PIN = `
   query GetSupervisorByPin($pin: String!) {
     Supervisor(where: {pin: {_eq: $pin}}) {
+      id
+      pin
+      username
+      firstName
+      lastName
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_SUPERVISOR_BY_ID = `
+  query GetSupervisorById($id: uuid!) {
+    Supervisor_by_pk(id: $id) {
       id
       pin
       username
