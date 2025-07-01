@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id          String        @id @default(cuid())
+  pin         String        @unique
+  firstName   String
+  lastName    String
+  phone       String?
+  address     String?
+  shoeSize    String?
+  jerseySize  String?
+  photoUrl    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  checkLogs   CheckLog[]
+}
+
+model Supervisor {
+  id          String        @id @default(cuid())
+  username    String        @unique
+  password    String
+  firstName   String
+  lastName    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  verifiedLogs CheckLog[]   @relation("VerifiedBy")
+}
+
+model CheckLog {
+  id              String      @id @default(cuid())
+  employeeId      String
+  employee        Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type            String      // "check-in" or "check-out"
+  timestamp       DateTime    @default(now())
+  photoUrl        String?
+  latitude        Float?
+  longitude       Float?
+  address         String?
+  isVerified      Boolean     @default(false)
+  verifiedAt      DateTime?
+  verifiedById    String?
+  verifiedBy      Supervisor? @relation("VerifiedBy", fields: [verifiedById], references: [id])
+  createdAt       DateTime    @default(now())
+  
+  @@index([employeeId])
+  @@index([timestamp])
+  @@index([isVerified])
+}
+
+model AdminCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String   // "full" or "restricted"
+  createdAt   DateTime @default(now())
+} 
