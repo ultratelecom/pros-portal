@@ -1,28 +1,22 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { verifyPassword, generateToken, setAuthCookie } from '$lib/server/auth';
+import { generateToken, setAuthCookie } from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
   try {
-    const { username, password } = await request.json();
+    const { pin } = await request.json();
     
-    if (!username || !password) {
-      return json({ error: 'Username and password are required' }, { status: 400 });
+    if (!pin) {
+      return json({ error: 'PIN is required' }, { status: 400 });
     }
     
-    // Find supervisor by username
+    // Find supervisor by PIN
     const supervisor = await db.supervisor.findUnique({
-      where: { username }
+      where: { pin }
     });
     
     if (!supervisor) {
-      return json({ error: 'Invalid credentials' }, { status: 401 });
-    }
-    
-    // Verify password
-    const validPassword = await verifyPassword(password, supervisor.password);
-    if (!validPassword) {
-      return json({ error: 'Invalid credentials' }, { status: 401 });
+      return json({ error: 'Invalid PIN' }, { status: 401 });
     }
     
     // Generate token and set cookie
@@ -37,7 +31,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       success: true,
       supervisor: {
         id: supervisor.id,
-        username: supervisor.username,
+        pin: supervisor.pin,
         firstName: supervisor.firstName,
         lastName: supervisor.lastName
       }

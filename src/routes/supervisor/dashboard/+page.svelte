@@ -1,25 +1,27 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { Check, X, MapPin, Calendar, User, LogOut } from 'lucide-svelte';
+  import { Check, X, MapPin, Calendar, User, LogOut, AlertTriangle } from 'lucide-svelte';
   
   export let data: any;
   
   let pendingLogs = data.pendingLogs || [];
   let loading = false;
   
-  async function verifyCheckLog(logId: string) {
+  async function updateCheckLogStatus(logId: string, status: 'verified' | 'invalid') {
     loading = true;
     try {
       const response = await fetch(`/api/supervisor/verify/${logId}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
       });
       
       if (response.ok) {
         // Remove from pending list
         pendingLogs = pendingLogs.filter((log: any) => log.id !== logId);
       } else {
-        alert('Failed to verify check-in');
+        alert(`Failed to ${status === 'verified' ? 'verify' : 'flag'} check-in`);
       }
     } catch (err) {
       alert('Network error. Please try again.');
@@ -115,15 +117,23 @@
                     {/if}
                   </div>
                   
-                  <!-- Verify Button -->
-                  <div class="mt-4">
+                  <!-- Action Buttons -->
+                  <div class="mt-4 flex gap-3">
                     <button
-                      on:click={() => verifyCheckLog(log.id)}
+                      on:click={() => updateCheckLogStatus(log.id, 'verified')}
                       disabled={loading}
                       class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300"
                     >
                       <Check class="w-4 h-4" />
-                      Verify Check-{log.type === 'check-in' ? 'In' : 'Out'}
+                      Verify
+                    </button>
+                    <button
+                      on:click={() => updateCheckLogStatus(log.id, 'invalid')}
+                      disabled={loading}
+                      class="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors disabled:bg-gray-300"
+                    >
+                      <AlertTriangle class="w-4 h-4" />
+                      Flag Invalid
                     </button>
                   </div>
                 </div>

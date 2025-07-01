@@ -2,8 +2,7 @@
   import { goto } from '$app/navigation';
   import { UserCheck } from 'lucide-svelte';
   
-  let username = '';
-  let password = '';
+  let pin = '';
   let loading = false;
   let error = '';
   
@@ -15,7 +14,7 @@
       const response = await fetch('/api/supervisor/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ pin })
       });
       
       const result = await response.json();
@@ -23,7 +22,7 @@
       if (response.ok) {
         goto('/supervisor/dashboard');
       } else {
-        error = result.error || 'Login failed';
+        error = result.error || 'Invalid PIN';
       }
     } catch (err) {
       error = 'Network error. Please try again.';
@@ -51,29 +50,19 @@
     
     <form on:submit|preventDefault={handleLogin} class="space-y-4">
       <div>
-        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
-          Username
+        <label for="pin" class="block text-sm font-medium text-gray-700 mb-1">
+          Supervisor PIN
         </label>
         <input
-          id="username"
-          type="text"
-          bind:value={username}
-          on:keypress={handleKeyPress}
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          required
-        />
-      </div>
-      
-      <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-          Password
-        </label>
-        <input
-          id="password"
+          id="pin"
           type="password"
-          bind:value={password}
+          bind:value={pin}
           on:keypress={handleKeyPress}
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          maxlength="5"
+          pattern="[0-9]*"
+          inputmode="numeric"
+          class="w-full text-center text-2xl font-mono px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          placeholder="•••••"
           required
         />
       </div>
@@ -86,12 +75,23 @@
       
       <button
         type="submit"
-        disabled={loading || !username || !password}
+        disabled={loading || pin.length !== 5}
         class="w-full bg-purple-600 text-white rounded-lg py-3 font-semibold disabled:bg-gray-300 hover:bg-purple-700 transition-colors"
       >
         {loading ? 'Signing in...' : 'Sign In'}
       </button>
     </form>
+    
+    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <h3 class="text-sm font-semibold text-blue-800 mb-2 text-center">Supervisor Test</h3>
+      <button
+        type="button"
+        on:click={() => { pin = '11111'; handleLogin(); }}
+        class="w-full bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+      >
+        Quick Login (11111)
+      </button>
+    </div>
     
     <div class="mt-6 text-center">
       <a href="/" class="text-sm text-gray-600 hover:text-gray-900">

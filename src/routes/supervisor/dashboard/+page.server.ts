@@ -1,6 +1,6 @@
 import type { PageServerLoad } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
-import { prisma } from '$lib/server/db';
+import { db } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Check if user is authenticated and is a supervisor
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
   
   // Get supervisor details
-  const supervisor = await prisma.supervisor.findUnique({
+  const supervisor = await db.supervisor.findUnique({
     where: { id: locals.user.id }
   });
   
@@ -17,15 +17,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     throw redirect(303, '/supervisor/login');
   }
   
-  // Get all pending (unverified) check logs
-  const pendingLogs = await prisma.checkLog.findMany({
-    where: { isVerified: false },
-    include: {
-      employee: true
-    },
-    orderBy: {
-      timestamp: 'desc'
-    }
+  // Get all pending check logs
+  const pendingLogs = await db.checkLog.findMany({
+    where: { status: 'pending' }
   });
   
   return {
@@ -34,18 +28,19 @@ export const load: PageServerLoad = async ({ locals }) => {
       firstName: supervisor.firstName,
       lastName: supervisor.lastName
     },
-    pendingLogs: pendingLogs.map(log => ({
+    pendingLogs: pendingLogs.map((log: any) => ({
       id: log.id,
       type: log.type,
-      timestamp: log.timestamp.toISOString(),
+      timestamp: log.timestamp,
       photoUrl: log.photoUrl,
       latitude: log.latitude,
       longitude: log.longitude,
+      address: log.address,
+      status: log.status,
       employee: {
-        id: log.employee.id,
-        pin: log.employee.pin,
-        firstName: log.employee.firstName,
-        lastName: log.employee.lastName
+        id: log.Employee.id,
+        firstName: log.Employee.firstName,
+        lastName: log.Employee.lastName
       }
     }))
   };

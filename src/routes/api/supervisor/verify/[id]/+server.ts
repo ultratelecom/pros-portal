@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 
-export const POST: RequestHandler = async ({ params, locals }) => {
+export const POST: RequestHandler = async ({ params, locals, request }) => {
   // Check if user is a supervisor
   if (!locals.user || locals.user.role !== 'supervisor') {
     return json({ error: 'Unauthorized' }, { status: 403 });
@@ -9,23 +9,28 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   
   try {
     const { id } = params;
+    const { status } = await request.json(); // 'verified' or 'invalid'
     
     if (!id) {
       return json({ error: 'Check log ID is required' }, { status: 400 });
     }
     
-    // Verify the check log
-    const checkLog = await db.checkLog.update({
+    if (!status || !['verified', 'invalid'].includes(status)) {
+      return json({ error: 'Valid status is required (verified or invalid)' }, { status: 400 });
+    }
+    
+    // Update the check log status
+    const checkLog = await db.checkLog.updateStatus({
       where: { id },
       data: {
-        isVerified: true,
+        status,
         verifiedById: locals.user.id
       }
     });
     
     return json({ success: true, checkLog });
   } catch (error) {
-    console.error('Verify check log error:', error);
-    return json({ error: 'Failed to verify check log' }, { status: 500 });
+    console.error('Update check log status error:', error);
+    return json({ error: 'Failed to update check log status' }, { status: 500 });
   }
 }; 

@@ -52,12 +52,12 @@ export const CREATE_CHECK_LOG = `
   }
 `;
 
-export const GET_SUPERVISOR_BY_USERNAME = `
-  query GetSupervisorByUsername($username: String!) {
-    Supervisor(where: {username: {_eq: $username}}) {
+export const GET_SUPERVISOR_BY_PIN = `
+  query GetSupervisorByPin($pin: String!) {
+    Supervisor(where: {pin: {_eq: $pin}}) {
       id
+      pin
       username
-      password
       firstName
       lastName
       createdAt
@@ -66,9 +66,9 @@ export const GET_SUPERVISOR_BY_USERNAME = `
   }
 `;
 
-export const GET_UNVERIFIED_CHECKLOGS = `
-  query GetUnverifiedCheckLogs {
-    CheckLog(where: {isVerified: {_eq: false}}, order_by: {timestamp: desc}) {
+export const GET_PENDING_CHECKLOGS = `
+  query GetPendingCheckLogs {
+    CheckLog(where: {status: {_eq: "pending"}}, order_by: {timestamp: desc}) {
       id
       employeeId
       type
@@ -78,6 +78,7 @@ export const GET_UNVERIFIED_CHECKLOGS = `
       longitude
       address
       isVerified
+      status
       verifiedAt
       verifiedById
       createdAt
@@ -90,14 +91,16 @@ export const GET_UNVERIFIED_CHECKLOGS = `
   }
 `;
 
-export const VERIFY_CHECK_LOG = `
-  mutation VerifyCheckLog($id: uuid!, $verifiedById: uuid!) {
+export const UPDATE_CHECK_LOG_STATUS = `
+  mutation UpdateCheckLogStatus($id: uuid!, $status: String!, $isVerified: Boolean!, $verifiedById: uuid!) {
     update_CheckLog_by_pk(pk_columns: {id: $id}, _set: {
-      isVerified: true,
+      status: $status,
+      isVerified: $isVerified,
       verifiedAt: "now()",
       verifiedById: $verifiedById
     }) {
       id
+      status
       isVerified
       verifiedAt
       verifiedById
@@ -146,6 +149,7 @@ export const GET_ALL_CHECKLOGS = `
       longitude
       address
       isVerified
+      status
       verifiedAt
       verifiedById
       createdAt
@@ -158,6 +162,41 @@ export const GET_ALL_CHECKLOGS = `
         id
         firstName
         lastName
+        pin
+      }
+    }
+  }
+`;
+
+export const GET_CHECKLOGS_BY_DATE_RANGE = `
+  query GetCheckLogsByDateRange($startDate: timestamptz!, $endDate: timestamptz!) {
+    CheckLog(
+      where: {timestamp: {_gte: $startDate, _lte: $endDate}},
+      order_by: [{Employee: {firstName: asc}}, {timestamp: asc}]
+    ) {
+      id
+      employeeId
+      type
+      timestamp
+      photoUrl
+      latitude
+      longitude
+      address
+      isVerified
+      status
+      verifiedAt
+      verifiedById
+      createdAt
+      Employee {
+        id
+        firstName
+        lastName
+      }
+      Supervisor {
+        id
+        firstName
+        lastName
+        pin
       }
     }
   }
