@@ -1,5 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { prisma } from '$lib/server/db';
+import { db } from '$lib/server/db';
 
 export const PUT: RequestHandler = async ({ request, params, locals }) => {
   // Check if user has full admin access
@@ -11,28 +11,21 @@ export const PUT: RequestHandler = async ({ request, params, locals }) => {
     const data = await request.json();
     const { id } = params;
     
-    // Check if employee exists
-    const employee = await prisma.employee.findUnique({
-      where: { id }
+        if (!id) {
+      return json({ error: 'Employee ID is required' }, { status: 400 });
+    }
+
+    // Check if new PIN already exists (if PIN is being changed)
+    const existingEmployee = await db.employee.findUnique({
+      where: { pin: data.pin }
     });
     
-    if (!employee) {
-      return json({ error: 'Employee not found' }, { status: 404 });
+    if (existingEmployee && existingEmployee.id !== id) {
+      return json({ error: 'PIN already exists' }, { status: 400 });
     }
-    
-    // Check if new PIN already exists (if PIN is being changed)
-    if (data.pin !== employee.pin) {
-      const existingEmployee = await prisma.employee.findUnique({
-        where: { pin: data.pin }
-      });
-      
-      if (existingEmployee) {
-        return json({ error: 'PIN already exists' }, { status: 400 });
-      }
-    }
-    
+
     // Update employee
-    const updatedEmployee = await prisma.employee.update({
+    const updatedEmployee = await db.employee.update({
       where: { id },
       data: {
         pin: data.pin,
@@ -62,8 +55,12 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   try {
     const { id } = params;
     
+    if (!id) {
+      return json({ error: 'Employee ID is required' }, { status: 400 });
+    }
+    
     // Delete employee (cascades to check logs)
-    await prisma.employee.delete({
+    await db.employee.delete({
       where: { id }
     });
     

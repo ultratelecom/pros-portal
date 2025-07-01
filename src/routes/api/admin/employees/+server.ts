@@ -1,5 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { prisma } from '$lib/server/db';
+import { db } from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   // Check if user has full admin access
@@ -10,17 +10,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   try {
     const data = await request.json();
     
-    // Check if PIN already exists
-    const existingEmployee = await prisma.employee.findUnique({
+        // Check if PIN already exists
+    const existingEmployee = await db.employee.findUnique({
       where: { pin: data.pin }
     });
-    
+
     if (existingEmployee) {
       return json({ error: 'PIN already exists' }, { status: 400 });
     }
-    
+
     // Create new employee
-    const employee = await prisma.employee.create({
+    const employee = await db.employee.create({
       data: {
         pin: data.pin,
         firstName: data.firstName,

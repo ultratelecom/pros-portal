@@ -82,7 +82,29 @@
       </button>
     </form>
     
-    <div class="mt-6 text-center space-y-2 text-sm text-gray-600">
+    <!-- Admin Test Section -->
+    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <h3 class="text-sm font-semibold text-blue-800 mb-3 text-center">Admin Test - Quick Login</h3>
+      <div class="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          on:click={() => { code = '00000'; handleLogin(); }}
+          class="bg-blue-600 text-white text-xs px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          Full Access (00000)
+        </button>
+        <button
+          type="button"
+          on:click={() => { code = '11111'; handleLogin(); }}
+          class="bg-gray-600 text-white text-xs px-3 py-2 rounded hover:bg-gray-700 transition-colors"
+        >
+          View Only (11111)
+        </button>
+      </div>
+    </div>
+    
+    <div class="mt-4 text-center space-y-1 text-xs text-gray-500">
+      <p>Manual Entry:</p>
       <p>Code 00000: Full Admin Access</p>
       <p>Code 11111: View-Only Access</p>
     </div>

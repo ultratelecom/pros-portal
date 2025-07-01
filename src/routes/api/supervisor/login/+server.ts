@@ -1,5 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { prisma } from '$lib/server/db';
+import { db } from '$lib/server/db';
 import { verifyPassword, generateToken, setAuthCookie } from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     }
     
     // Find supervisor by username
-    const supervisor = await prisma.supervisor.findUnique({
+    const supervisor = await db.supervisor.findUnique({
       where: { username }
     });
     

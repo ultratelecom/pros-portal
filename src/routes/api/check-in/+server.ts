@@ -1,5 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { prisma } from '$lib/server/db';
+import { db } from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const longitude = formData.get('longitude') as string;
     
     // Find employee by PIN
-    const employee = await prisma.employee.findUnique({
+    const employee = await db.employee.findUnique({
       where: { pin }
     });
     
@@ -28,14 +28,13 @@ export const POST: RequestHandler = async ({ request }) => {
     }
     
     // Create check log
-    const checkLog = await prisma.checkLog.create({
+    const checkLog = await db.checkLog.create({
       data: {
         employeeId: employee.id,
         type,
         photoUrl,
         latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
-        isVerified: false
+        longitude: longitude ? parseFloat(longitude) : null
       }
     });
     
