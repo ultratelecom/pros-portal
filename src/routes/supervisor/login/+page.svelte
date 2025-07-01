@@ -86,10 +86,10 @@
       <h3 class="text-sm font-semibold text-blue-800 mb-2 text-center">Supervisor Test</h3>
       <button
         type="button"
-        on:click={() => { pin = '11111'; handleLogin(); }}
+        on:click={() => { pin = '22222'; handleLogin(); }}
         class="w-full bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700 transition-colors"
       >
-        Quick Login (11111)
+        Quick Login (22222)
       </button>
     </div>
     

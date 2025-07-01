@@ -13,9 +13,9 @@ A comprehensive employee time tracking system for cleaning companies with photo 
 
 ### 👥 Access Control
 - **Employees**: Check-in/out with 4-digit PIN
-- **Supervisors**: Verify employee check-ins/outs
+- **Supervisors**: Use 5-digit PIN (22222) to verify or flag employee check-ins/outs
 - **Admins**: 
-  - Code `00000`: Full access (manage employees, edit data)
+  - Code `00000`: Full access (manage employees, edit data, delete check-ins)
   - Code `11111`: View-only access (check-in logs only)
 
 ### 📊 Employee Management
@@ -90,8 +90,7 @@ npm run dev
 ## Default Credentials
 
 ### Supervisor Login
-- Username: `supervisor`
-- Password: `admin123`
+- PIN: `22222`
 
 ### Admin Access Codes
 - Full Access: `00000`
